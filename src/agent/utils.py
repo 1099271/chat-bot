@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from langgraph.graph import END
 from schemas import State
+from langgraph.types import Command, interrupt
+from langchain_core.tools import tool
 
 load_dotenv()
 
@@ -22,3 +24,9 @@ def route_tools(state: State):
     if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
         return "tools"
     return END
+
+@tool
+def human_assistance(query: str) -> str:
+    """Ask for human assistance."""
+    human_response = interrupt({"query": query})
+    return human_response

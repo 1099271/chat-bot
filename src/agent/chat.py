@@ -2,9 +2,19 @@ from graph import graph
 
 
 def stream_graph_updates(user_input: str):
-    for event in graph.stream({"messages": [{"role": "user", "content": user_input}]}):
-        for value in event.values():
-            print("Assistant:", value["messages"][-1].content)
+    # user_input = "I need some expert guidance for building an AI Agent. Could you request assistance for me?"
+    events = graph.stream(
+        {"messages": [{"role": "user", "content": user_input}]},
+          config={"configurable": {"thread_id": "1"}},
+          stream_mode="values"
+          )
+
+    for event in events:
+        print(event)
+        if "messages" in event:
+            event["messages"][-1].pretty_print()
+        # for value in event.values():
+        #     print("Assistant:", value["messages"][-1].content)
 
 
 # print(tool.invoke("What is the latest news about LangGraph?"))
