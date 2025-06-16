@@ -4,7 +4,9 @@ from dotenv import load_dotenv
 from langgraph.graph import END
 from schemas import State
 from langgraph.types import Command, interrupt
-from langchain_core.tools import tool
+from langchain_core.tools import tool, InjectedToolCallId
+from typing import Annotated
+from langchain_core.messages import ToolMessage
 
 load_dotenv()
 
@@ -25,8 +27,33 @@ def route_tools(state: State):
         return "tools"
     return END
 
+
 @tool
-def human_assistance(query: str) -> str:
-    """Ask for human assistance."""
-    human_response = interrupt({"query": query})
-    return human_response
+def human_assistance(
+    name: str, birthday: str, tool_call_id: Annotated[str, InjectedToolCallId]
+) -> str:
+    """Request assistance from a human."""
+    human_response = interrupt(
+        {
+            "question": "Is this correct?",
+            "name": name,
+            "birthday": birthday,
+        }
+    )
+
+    if human_response.get("correct", "").lower().startswith("y"):
+        verified_name = name
+        verified_birthday = birthday
+        response = "Correct"
+    else:
+        verified_name = human_response.get("name", name)
+        verified_birthday = human_response.get("birthday", birthday)
+        response = f"Made a correction: {human_response}"
+
+    state_update = {
+        "name": verified_name,
+        "birthday": verified_birthday,
+        "messages": [ToolMessage(response, tool_call_id=tool_call_id)],
+    }
+
+    return Command(update=state_update)

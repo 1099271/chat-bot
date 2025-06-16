@@ -7,6 +7,8 @@ from langchain_core.messages import ToolMessage
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
+    name: str
+    birthday: str
 
 
 class BasicToolNode:
